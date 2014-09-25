@@ -1,0 +1,4 @@
+mock
+pytest
+pytest-xdist
+pytest-cov

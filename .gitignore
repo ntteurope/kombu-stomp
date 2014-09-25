@@ -9,6 +9,7 @@ __pycache__/
 .Python
 env/
 build/
+<<<<<<< HEAD
 develop-eggs/
 dist/
 downloads/
@@ -36,9 +37,11 @@ pip-delete-this-directory.txt
 htmlcov/
 .tox/
 .coverage
+.coverage.*
 .cache
 nosetests.xml
 coverage.xml
+junit-*.xml
 
 # Translations
 *.mo
