@@ -1,7 +1,7 @@
 Introduction
 ============
 This is project is an effort for adding STOMP protocol support to Kombu, mostly
-Celery oriented.
+Celery oriented. You can find documentation at `Read the docs`_.
 
 Limitations
 -----------
@@ -14,3 +14,5 @@ Currently we offer very limited support:
 * No PyPy, Jython support.
 
 * There is no transport options support but the host, port and credentials.
+
+.. _`Read the docs`: http://kombu-stomp.readthedocs.org/en/latest/
