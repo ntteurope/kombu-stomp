@@ -10,4 +10,3 @@
   and port.
 * Do not block on connect unconditionally (see kombu nowait kwarg)
 * SSL support
-* Docs
