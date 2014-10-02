@@ -26,6 +26,7 @@ class Message(virtual.Message):
 
 
 class QoS(virtual.QoS):
+    """Kombu quality of service class for ``kombu-stomp``."""
     def __init__(self, *args, **kwargs):
         self.ids = {}
         super(QoS, self).__init__(*args, **kwargs)
@@ -46,6 +47,7 @@ class QoS(virtual.QoS):
 
 
 class Channel(virtual.Channel):
+    """``kombu-stomp`` channel class."""
     QoS = QoS
     Message = Message
 
@@ -53,11 +55,11 @@ class Channel(virtual.Channel):
         super(Channel, self).__init__(*args, **kwargs)
         self._stomp_conn = None
 
-    def _get(self, queue):
-        """Get next messesage from `queue`."""
+    def _get_many(self, queue, timeout=None):
+        """Get next messesage from current active queues."""
         with self.conn_or_acquire() as conn:
             # FIXME(rafaduran): inappropriate intimacy code smell
-            return next(conn.message_listener.iterator(timeout=None))
+            return next(conn.message_listener.iterator(timeout=timeout))
 
     def _put(self, queue, message, **kwargs):
         with self.conn_or_acquire() as conn:
@@ -113,6 +115,10 @@ class Channel(virtual.Channel):
 
     @property
     def stomp_conn(self):
+        """Property over the stomp.py connection object.
+
+        It will create the connection object at first use.
+        """
         if not self._stomp_conn:
             self._stomp_conn = stomp.Connection(**self._get_params())
 
@@ -144,4 +150,5 @@ class Channel(virtual.Channel):
 
 
 class Transport(virtual.Transport):
+    """Transport class for ``kombu-stomp``."""
     Channel = Channel

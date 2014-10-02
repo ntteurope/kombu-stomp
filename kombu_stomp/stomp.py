@@ -8,6 +8,7 @@ from stomp import listener
 
 
 class MessageListener(listener.ConnectionListener):
+    """stomp.py listener used by ``kombu-stomp``"""
     def __init__(self, q=None):
         if not q:
             q = queue.Queue()
@@ -43,7 +44,10 @@ class MessageListener(listener.ConnectionListener):
         # properties is a dictionary and we need evaluate it
         message['properties'] = ast.literal_eval(message['properties'])
         message['body'] = body
-        return message, msg_id
+        return (
+            (message, msg_id),
+            self.queue_from_destination(headers['destination']),
+        )
 
     def iterator(self, timeout):
         """Return a Python generator consuming received messages.
@@ -55,14 +59,19 @@ class MessageListener(listener.ConnectionListener):
             we shouldn't block for incoming messages.
         :yields dict: A dictionary representing the message in a Kombu
             compatible format.
-        :raises Empty: When there is no message to be consumed.
+        :raises: :py:exc:`Queue.Empty` When there is no message to be consumed.
         """
         while True:
             # Block only if get got a timeout
             yield self.q.get(block=bool(timeout), timeout=timeout)
 
+    def queue_from_destination(self, destination):
+        """Get the queue name from a destination header value."""
+        return destination.split('/queue/')[1]
+
 
 class Connection(stomp.Connection10):
+    """Connection object used by ``kombu-stomp``"""
     def __init__(self, *args, **kwargs):
         super(Connection, self).__init__(*args, **kwargs)
         self.message_listener = MessageListener()
