@@ -43,7 +43,10 @@ class MessageListener(listener.ConnectionListener):
         # properties is a dictionary and we need evaluate it
         message['properties'] = ast.literal_eval(message['properties'])
         message['body'] = body
-        return message, msg_id
+        return (
+            (message, msg_id),
+            self.queue_from_destination(headers['destination']),
+        )
 
     def iterator(self, timeout):
         """Return a Python generator consuming received messages.
@@ -60,6 +63,10 @@ class MessageListener(listener.ConnectionListener):
         while True:
             # Block only if get got a timeout
             yield self.q.get(block=bool(timeout), timeout=timeout)
+
+    def queue_from_destination(self, destination):
+        """Get the queue name from a destination header value."""
+        return destination.split('/queue/')[1]
 
 
 class Connection(stomp.Connection10):

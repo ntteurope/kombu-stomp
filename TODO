@@ -1,8 +1,6 @@
 * Compression support: when we sent a compressed message ActiveMQ seems to not
   being sending back the compression header, so Kombu doesn't know how to
   handle the message.
-* Add support for _get_many transport method, so we can read all queues at the
-  same time.
 * Do we need a queue iterator sentinel?? So we can notify the queue is empty
   and probably set QoS to not able to consume.
 * STOMP transaction support

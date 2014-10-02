@@ -55,7 +55,7 @@ class MessageListenerTests(ListenerTestCase):
 
     def test_to_kombu_message__return_message_as_dict(self):
         self.assertDictEqual(
-            self.listener.to_kombu_message(self.headers, self.body)[0],
+            self.listener.to_kombu_message(self.headers, self.body)[0][0],
             {
                 'content-encoding': 'utf-8',
                 'content-type': 'application/json',
@@ -75,8 +75,14 @@ class MessageListenerTests(ListenerTestCase):
 
     def test_to_kombu_message__return_message_id(self):
         self.assertEqual(
-            self.listener.to_kombu_message(self.headers, self.body)[1],
+            self.listener.to_kombu_message(self.headers, self.body)[0][1],
             'ID:services-55311-1412009732901-5:6816:-1:1:1',
+        )
+
+    def test_to_kombu_message__return_queue_name(self):
+        self.assertEqual(
+            self.listener.to_kombu_message(self.headers, self.body)[1],
+            'simple_queue',
         )
 
     def test_iterator(self):
@@ -95,6 +101,12 @@ class MessageListenerTests(ListenerTestCase):
         it = self.listener.iterator(None)
         next(it)
         self.queue.get.assert_called_once_with(block=False, timeout=None)
+
+    def test_queue_from_destination(self):
+        self.assertEqual(
+            self.listener.queue_from_destination(self.headers['destination']),
+            'simple_queue',
+        )
 
 
 class ConnectionTests(unittest.TestCase):
