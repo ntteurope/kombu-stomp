@@ -53,11 +53,11 @@ class Channel(virtual.Channel):
         super(Channel, self).__init__(*args, **kwargs)
         self._stomp_conn = None
 
-    def _get(self, queue):
-        """Get next messesage from `queue`."""
+    def _get_many(self, queue, timeout=None):
+        """Get next messesage from current active queues."""
         with self.conn_or_acquire() as conn:
             # FIXME(rafaduran): inappropriate intimacy code smell
-            return next(conn.message_listener.iterator(timeout=None))
+            return next(conn.message_listener.iterator(timeout=timeout))
 
     def _put(self, queue, message, **kwargs):
         with self.conn_or_acquire() as conn:

@@ -141,12 +141,12 @@ class ChannelConnectionTests(unittest.TestCase):
 
     @mock.patch('kombu_stomp.transport.Channel.conn_or_acquire',
                 new_callable=mock.MagicMock)  # for the context manager
-    def test_get(self, conn_or_acquire):
+    def test_get_many(self, conn_or_acquire):
         stomp_conn = conn_or_acquire.return_value.__enter__.return_value
         iterator = stomp_conn.message_listener.iterator
         iterator.return_value = iter([1])
 
-        self.assertEqual(self.channel._get(self.queue), 1)
+        self.assertEqual(self.channel._get_many([self.queue]), 1)
         iterator.assert_called_once_with(timeout=None)
 
     @mock.patch('kombu_stomp.transport.Channel.conn_or_acquire',
