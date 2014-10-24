@@ -1,5 +1,10 @@
 Introduction
 ============
+.. image:: https://api.travis-ci.org/ntteurope/kombu-stomp.svg?branch=master
+   :target: https://travis-ci.org/ntteurope/kombu-stomp
+.. image:: https://coveralls.io/repos/ntteurope/kombu-stomp/badge.png?branch=master
+   :target: https://coveralls.io/r/ntteurope/kombu-stomp?branch=master
+
 This is project is an effort for adding STOMP protocol support to Kombu, mostly
 Celery oriented. You can find documentation at `Read the docs`_.
 
