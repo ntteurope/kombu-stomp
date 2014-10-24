@@ -220,3 +220,13 @@ class ChannelConnectionTests(unittest.TestCase):
     def test_close__close_closed_connection(self, Connection, close):
         Connection.close.side_effect = exc.NotConnectedException
         self.channel.close()  # just check this doesn't trigger exceptions
+
+    def test_queue_destination__prefix(self):
+        self.connection.client.transport_options = {
+            'queue_name_prefix': 'prefix.',
+        }
+
+        self.assertEqual(
+            self.channel.queue_destination(self.queue),
+            '/queue/prefix.queue',
+        )
