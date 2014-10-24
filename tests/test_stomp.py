@@ -108,14 +108,21 @@ class MessageListenerTests(ListenerTestCase):
             'simple_queue',
         )
 
+    def test_queue_from_destination__prefix(self):
+        self.listener.prefix = 'prefix.'
+        self.assertEqual(
+            self.listener.queue_from_destination('/queue/prefix.simple_queue'),
+            'simple_queue',
+        )
+
 
 class ConnectionTests(unittest.TestCase):
 
     @mock.patch('kombu_stomp.stomp.MessageListener')
-    def test_message_lisetner_its_set_on_init(self, Listener):
+    def test_message_listener_its_set_on_init(self, Listener):
         self.conn = stomp.Connection()
         self.assertEqual(
             self.conn.get_listener('message_listener'),
             Listener.return_value,
         )
-        Listener.assert_called_once_with()
+        Listener.assert_called_once_with(prefix='')

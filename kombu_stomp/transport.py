@@ -2,6 +2,7 @@ from __future__ import absolute_import
 import contextlib
 
 from kombu.transport import virtual
+from kombu import utils
 from stomp import exception as exc
 
 from . import stomp
@@ -98,7 +99,8 @@ class Channel(virtual.Channel):
             conn.unsubscribe(self.queue_destination(queue))
 
     def queue_destination(self, queue):
-        return '/queue/{name}'.format(name=queue)
+        return '/queue/{prefix}{name}'.format(prefix=self.prefix,
+                                              name=queue)
 
     @contextlib.contextmanager
     def conn_or_acquire(self, disconnect=False):
@@ -120,9 +122,18 @@ class Channel(virtual.Channel):
         It will create the connection object at first use.
         """
         if not self._stomp_conn:
-            self._stomp_conn = stomp.Connection(**self._get_params())
+            self._stomp_conn = stomp.Connection(self.prefix,
+                                                **self._get_params())
 
         return self._stomp_conn
+
+    @property
+    def transport_options(self):
+        return self.connection.client.transport_options
+
+    @utils.cached_property
+    def prefix(self):
+        return self.transport_options.get('queue_name_prefix', '')
 
     def _get_params(self):
         return {

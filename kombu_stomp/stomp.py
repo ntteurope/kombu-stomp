@@ -9,11 +9,12 @@ from stomp import listener
 
 class MessageListener(listener.ConnectionListener):
     """stomp.py listener used by ``kombu-stomp``"""
-    def __init__(self, q=None):
+    def __init__(self, prefix='', q=None):
         if not q:
             q = queue.Queue()
 
         self.q = q
+        self.prefix = prefix
 
     def on_message(self, headers, body):
         """Received message hook.
@@ -67,12 +68,12 @@ class MessageListener(listener.ConnectionListener):
 
     def queue_from_destination(self, destination):
         """Get the queue name from a destination header value."""
-        return destination.split('/queue/')[1]
+        return destination.split('/queue/{0}'.format(self.prefix))[1]
 
 
 class Connection(stomp.Connection10):
     """Connection object used by ``kombu-stomp``"""
-    def __init__(self, *args, **kwargs):
+    def __init__(self, prefix='', *args, **kwargs):
         super(Connection, self).__init__(*args, **kwargs)
-        self.message_listener = MessageListener()
+        self.message_listener = MessageListener(prefix=prefix)
         self.set_listener('message_listener', self.message_listener)
