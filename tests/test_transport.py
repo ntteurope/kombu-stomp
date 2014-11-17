@@ -146,6 +146,17 @@ class ChannelConnectionTests(unittest.TestCase):
         iterator = stomp_conn.message_listener.iterator
         iterator.return_value = iter([1])
 
+        self.channel._get_many([self.queue])
+
+        self.assertSetEqual(self.channel._subscriptions, set([self.queue]))
+
+    @mock.patch('kombu_stomp.transport.Channel.conn_or_acquire',
+                new_callable=mock.MagicMock)  # for the context manager
+    def test_get_many__return(self, conn_or_acquire):
+        stomp_conn = conn_or_acquire.return_value.__enter__.return_value
+        iterator = stomp_conn.message_listener.iterator
+        iterator.return_value = iter([1])
+
         self.assertEqual(self.channel._get_many([self.queue]), 1)
         iterator.assert_called_once_with(timeout=None)
 
@@ -162,22 +173,36 @@ class ChannelConnectionTests(unittest.TestCase):
             'body'
         )
 
-    @mock.patch('kombu.transport.virtual.Channel.queue_bind')
+    @mock.patch('kombu.transport.virtual.Channel.basic_consume')
     @mock.patch('kombu_stomp.transport.Channel.conn_or_acquire',
                 new_callable=mock.MagicMock)  # for the context manager
-    def test_queue_bind__calls_super(self, conn_or_acquire, queue_bind):
-        self.channel.queue_bind(self.queue)
-
-        queue_bind.assert_called_once_with(self.queue, None, '', None)
-
-    @mock.patch('kombu.transport.virtual.Channel.queue_bind')
-    @mock.patch('kombu_stomp.transport.Channel.conn_or_acquire',
-                new_callable=mock.MagicMock)  # for the context manager
-    def test_queue_bind__subscribe(self, conn_or_acquire, queue_bind):
+    def test_basic_consume__subscribe(self, conn_or_acquire, basic_consume):
         stomp_conn = conn_or_acquire.return_value.__enter__.return_value
-        self.channel.queue_bind(self.queue)
+        self.channel.basic_consume(self.queue)
 
         stomp_conn.subscribe.assert_called_once_with(
+            '/queue/{0}'.format(self.queue),
+            ack='client-individual',
+        )
+
+    @mock.patch('kombu.transport.virtual.Channel.basic_consume')
+    @mock.patch('kombu_stomp.transport.Channel.conn_or_acquire',
+                new_callable=mock.MagicMock)  # for the context manager
+    def test_basic_consume__super(self, conn_or_acquire, basic_consume):
+        self.channel.basic_consume(self.queue)
+
+        basic_consume.assert_called_once_with(self.queue)
+
+    def test_subscribe__already_subscribed(self):
+        self.channel.subscribe(self.connection, self.queue)
+
+        self.assertIsNone(self.channel.subscribe(self.connection, self.queue))
+        self.assertEqual(self.connection.subscribe.call_count, 1)
+
+    def test_subscribe__super(self):
+        self.channel.subscribe(self.connection, self.queue)
+
+        self.connection.subscribe.assert_called_once_with(
             '/queue/{0}'.format(self.queue),
             ack='client-individual',
         )
@@ -193,13 +218,26 @@ class ChannelConnectionTests(unittest.TestCase):
     @mock.patch('kombu.transport.virtual.Channel.queue_unbind')
     @mock.patch('kombu_stomp.transport.Channel.conn_or_acquire',
                 new_callable=mock.MagicMock)  # for the context manager
-    def test_queue_bind__unsubscribe(self, conn_or_acquire, queue_unbind):
+    def test_queue_unbind__unsubscribe(self, conn_or_acquire, queue_unbind):
         stomp_conn = conn_or_acquire.return_value.__enter__.return_value
         self.channel.queue_unbind(self.queue)
 
         stomp_conn.unsubscribe.assert_called_once_with(
             '/queue/{0}'.format(self.queue)
         )
+
+    @mock.patch('kombu.transport.virtual.Channel.queue_unbind')
+    @mock.patch('kombu_stomp.transport.Channel.conn_or_acquire',
+                new_callable=mock.MagicMock)  # for the context manager
+    def test_queue_unbind__subscriptions_discard(self,
+                                                 conn_or_acquire,
+                                                 queue_unbind):
+        self.channel.subscribe(mock.MagicMock(), self.queue)
+        self.assertSetEqual(self.channel._subscriptions, set([self.queue]))
+
+        self.channel.queue_unbind(self.queue)
+
+        self.assertSetEqual(self.channel._subscriptions, set())
 
     @mock.patch('kombu.transport.virtual.Channel.close')
     @mock.patch('kombu_stomp.stomp.Connection')

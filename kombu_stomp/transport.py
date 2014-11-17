@@ -55,10 +55,14 @@ class Channel(virtual.Channel):
     def __init__(self, *args, **kwargs):
         super(Channel, self).__init__(*args, **kwargs)
         self._stomp_conn = None
+        self._subscriptions = set()
 
     def _get_many(self, queue, timeout=None):
         """Get next messesage from current active queues."""
         with self.conn_or_acquire() as conn:
+            for q in queue:
+                self.subscribe(conn, q)
+
             # FIXME(rafaduran): inappropriate intimacy code smell
             return next(conn.message_listener.iterator(timeout=timeout))
 
@@ -67,22 +71,19 @@ class Channel(virtual.Channel):
             body = message.pop('body')
             conn.send(self.queue_destination(queue), body, **message)
 
-    def queue_bind(self,
-                   queue,
-                   exchange=None,
-                   routing_key='',
-                   arguments=None,
-                   **kwargs):
-        super(Channel, self).queue_bind(queue,
-                                        exchange,
-                                        routing_key,
-                                        arguments,
-                                        **kwargs)
+    def basic_consume(self, queue, *args, **kwargs):
         with self.conn_or_acquire() as conn:
-            conn.subscribe(
-                self.queue_destination(queue),
-                ack='client-individual'
-            )
+            self.subscribe(conn, queue)
+
+        return super(Channel, self).basic_consume(queue, *args, **kwargs)
+
+    def subscribe(self, conn, queue):
+        if queue in self._subscriptions:
+            return
+
+        self._subscriptions.add(queue)
+        return conn.subscribe(self.queue_destination(queue),
+                              ack='client-individual')
 
     def queue_unbind(self,
                      queue,
@@ -97,6 +98,7 @@ class Channel(virtual.Channel):
                                           **kwargs)
         with self.conn_or_acquire() as conn:
             conn.unsubscribe(self.queue_destination(queue))
+            self._subscriptions.discard(queue)
 
     def queue_destination(self, queue):
         return '/queue/{prefix}{name}'.format(prefix=self.prefix,
