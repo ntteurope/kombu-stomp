@@ -1,5 +1,6 @@
 import os
 
+from pip import download
 from pip import req
 import setuptools
 
@@ -8,8 +9,10 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 
 def get_requirements(reqfile):
     path = os.path.join(HERE, reqfile)
-    return set([dep.name
-                for dep in req.parse_requirements(path)])
+    session = download.PipSession()
+    return set(
+        [dep.name for dep in req.parse_requirements(path, session=session)]
+    )
 
 
 setuptools.setup(
