@@ -58,13 +58,17 @@ class Channel(virtual.Channel):
         self._subscriptions = set()
 
     def _get_many(self, queue, timeout=None):
-        """Get next messesage from current active queues."""
+        """Get next messesage from current active queues.
+
+        Note that we are ignoring any timeout due to performance
+        issues.
+        """
         with self.conn_or_acquire() as conn:
             for q in queue:
                 self.subscribe(conn, q)
 
             # FIXME(rafaduran): inappropriate intimacy code smell
-            return next(conn.message_listener.iterator(timeout=timeout))
+            return next(conn.message_listener.iterator())
 
     def _put(self, queue, message, **kwargs):
         with self.conn_or_acquire() as conn:
