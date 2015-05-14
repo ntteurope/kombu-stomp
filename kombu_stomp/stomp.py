@@ -50,21 +50,18 @@ class MessageListener(listener.ConnectionListener):
             self.queue_from_destination(headers['destination']),
         )
 
-    def iterator(self, timeout):
+    def iterator(self):
         """Return a Python generator consuming received messages.
 
         If we try to consume a message and there is no messages remaining, then
         an exception will be raised.
 
-        :arg int timeout: Time to wait for message in seconds, a falsy value if
-            we shouldn't block for incoming messages.
         :yields dict: A dictionary representing the message in a Kombu
             compatible format.
         :raises: :py:exc:`Queue.Empty` When there is no message to be consumed.
         """
         while True:
-            # Block only if get got a timeout
-            yield self.q.get(block=bool(timeout), timeout=timeout)
+            yield self.q.get_nowait()
 
     def queue_from_destination(self, destination):
         """Get the queue name from a destination header value."""

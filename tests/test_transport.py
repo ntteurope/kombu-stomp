@@ -158,7 +158,7 @@ class ChannelConnectionTests(unittest.TestCase):
         iterator.return_value = iter([1])
 
         self.assertEqual(self.channel._get_many([self.queue]), 1)
-        iterator.assert_called_once_with(timeout=None)
+        iterator.assert_called_once_with()
 
     @mock.patch('kombu_stomp.transport.Channel.conn_or_acquire',
                 new_callable=mock.MagicMock)  # for the context manager

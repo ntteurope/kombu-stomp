@@ -86,21 +86,15 @@ class MessageListenerTests(ListenerTestCase):
         )
 
     def test_iterator(self):
-        self.queue.get.side_effect = (1, 3)
-        it = self.listener.iterator(timeout=5)
+        self.queue.get_nowait.side_effect = (1, 3)
+        it = self.listener.iterator()
         self.assertEqual(1, next(it))
         self.assertEqual(3, next(it))
 
     def test_iterator__empty(self):
         self.listener.q = queue.Queue()
-        it = self.listener.iterator(timeout=None)
+        it = self.listener.iterator()
         self.assertRaises(queue.Empty, lambda: next(it))
-
-    def test_iterator__non_blocking(self):
-        self.queue.get.side_effect = [1]
-        it = self.listener.iterator(None)
-        next(it)
-        self.queue.get.assert_called_once_with(block=False, timeout=None)
 
     def test_queue_from_destination(self):
         self.assertEqual(

@@ -20,4 +20,6 @@ Currently we offer very limited support:
 
 * There is no transport options support but the host, port and credentials.
 
+* There is no support for timeout when consuming queues.
+
 .. _`Read the docs`: http://kombu-stomp.readthedocs.org/en/latest/
