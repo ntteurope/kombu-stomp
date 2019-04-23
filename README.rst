@@ -1,3 +1,5 @@
+THIS PROJECT IS ABANDONED
+
 Introduction
 ============
 .. image:: https://api.travis-ci.org/ntteurope/kombu-stomp.svg?branch=master
